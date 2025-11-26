@@ -48,14 +48,19 @@ Siga os passos abaixo para configurar o ambiente de desenvolvimento.
     ```
 
 3.  **Crie o arquivo de credenciais:**
-    Crie um arquivo chamado `.env` na raiz do projeto.
+    Copie o arquivo de exemplo `.env.example` para `.env` e preencha com suas credenciais.
+    ```bash
+    cp .env.example .env
+    ```
+    
+    Edite o arquivo `.env`:
     ```ini
     # .env
     EPROC_LOGIN="seu_login_aqui"
     EPROC_SENHA="sua_senha_aqui"
     
     # Opcionais (valores padrão)
-    EPROC_URL="https://eproc.tjto.jus.br/"
+    EPROC_URL="https://eproc1.tjto.jus.br/eprocV2_prod_1grau/"
     HEADLESS=True
     LOG_LEVEL="INFO"
     ```
@@ -73,18 +78,23 @@ Siga os passos abaixo para configurar o ambiente de desenvolvimento.
 
 ### 1. Via Linha de Comando (CLI)
 
-Ideal para execuções pontuais e testes.
+Ideal para execuções pontuais e testes. Execute o script principal usando o módulo `src.main`.
 
-- Execute o script principal usando o módulo `src.main`:
+**Scripts Disponíveis:**
 
-- **Exemplo (executando `exemplo_extracao`):**
-  ```bash
-  python -m src.main --script exemplo_extracao
-  ```
+- **`exemplo_extracao`**: Um tutorial interativo que demonstra como usar o Playwright (navegação, seletores, ações). Ótimo para aprendizado.
+- **`loc_peticoes`**: Script para extração da lista de processos do localizador PETIÇÕES.
 
-- **Para visualizar o navegador**, adicione a flag `--show-browser`:
+**Exemplos:**
+
+- **Rodar o tutorial de exemplo:**
   ```bash
   python -m src.main --script exemplo_extracao --show-browser
+  ```
+
+- **Rodar a extração de petições:**
+  ```bash
+  python -m src.main --script loc_peticoes
   ```
 
 ### 2. Via API Web
@@ -118,10 +128,10 @@ A API permite integrar o robô a outros sistemas.
         async def run(self, page: Page) -> ScraperResult:
             self.logger.info("Iniciando meu script...")
             
-            # Use self.login(page) se precisar logar
-            # await self.login(page)
+            # Navega para a URL configurada no .env
+            await self.navigate_to_home(page)
 
-            await page.goto("https://eproc.tjto.jus.br/")
+            # ... sua lógica de automação ...
             title = await page.title()
             
             return ScraperResult(
@@ -142,11 +152,13 @@ Robo_Eproc/
 ├── src/
 │   ├── scripts/          # Scripts de automação
 │   │   ├── base.py       # Classe BaseScraper
-│   │   └── ...
+│   │   ├── exemplo_extracao.py # Tutorial Playwright
+│   │   └── loc_peticoes.py     # Extração de Petições
 │   ├── config.py         # Configurações (Pydantic)
 │   ├── logger.py         # Configuração de Logs
 │   └── main.py           # Ponto de entrada (API e CLI)
-├── .env                  # Variáveis de ambiente
+├── .env                  # Variáveis de ambiente (Ignorado pelo Git)
+├── .env.example          # Modelo de variáveis de ambiente
 ├── mkdocs.yml            # Configuração MkDocs
 ├── README.md             # Este arquivo
 └── requirements.txt      # Dependências
