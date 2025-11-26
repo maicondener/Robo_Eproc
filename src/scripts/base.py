@@ -23,12 +23,25 @@ class BaseScraper(ABC):
         """
         pass
 
+    async def navigate_to_home(self, page: Page):
+        """
+        Navega para a URL base configurada no sistema.
+        """
+        url = settings.EPROC_URL
+        self.logger.info(f"Navegando para a página inicial: {url}")
+        await page.goto(url)
+
     async def login(self, page: Page):
         """
         Método auxiliar para realizar login no Eproc.
         Pode ser reutilizado pelos scripts que precisam de autenticação.
         """
         self.logger.info("Iniciando processo de login...")
+        
+        # Garante que estamos na página correta antes de logar
+        if page.url == "about:blank":
+             await self.navigate_to_home(page)
+
         # TODO: Implementar a lógica real de login do Eproc aqui
         # Por enquanto, apenas simula o uso das credenciais
         if not settings.EPROC_LOGIN or not settings.EPROC_SENHA:
@@ -36,7 +49,6 @@ class BaseScraper(ABC):
             return
 
         # Exemplo de fluxo de login (adaptar para o Eproc real)
-        # await page.goto("https://eproc.tjto.jus.br/")
         # await page.fill("#txtUsuario", settings.EPROC_LOGIN)
         # await page.fill("#pwdSenha", settings.EPROC_SENHA)
         # await page.click("#sbmEntrar")
