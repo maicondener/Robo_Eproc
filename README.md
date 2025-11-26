@@ -55,6 +55,7 @@ Siga os passos abaixo para configurar o ambiente de desenvolvimento.
     EPROC_SENHA="sua_senha_aqui"
     
     # Opcionais (valores padrão)
+    EPROC_URL="https://eproc.tjto.jus.br/"
     HEADLESS=True
     LOG_LEVEL="INFO"
     ```
