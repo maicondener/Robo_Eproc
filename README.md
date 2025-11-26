@@ -5,8 +5,10 @@ O **Robô de Extração Eproc** é uma ferramenta de automação desenvolvida pa
 ## ✨ Principais Características
 
 - **Dupla Interface:** Execute automações através de uma API RESTful (FastAPI) ou diretamente no terminal.
-- **Gerenciamento Seguro de Credenciais:** Utiliza arquivos `.env` validados pelo Pydantic para gerenciar configurações.
-- **Automação Moderna:** Construído com [Playwright](https://playwright.dev/python/) para uma automação web robusta.
+- **Autenticação Avançada:** Suporte a **2FA (Autenticação de Dois Fatores)** automático via TOTP.
+- **Persistência de Sessão:** Reutiliza cookies e sessão (`state.json`) para evitar logins repetitivos e bloqueios.
+- **Gerenciamento Seguro de Credenciais:** Utiliza arquivos `.env` validados pelo Pydantic.
+- **Automação Moderna:** Construído com [Playwright](https://playwright.dev/python/) (configurável para Chrome/Edge).
 - **Logs Estruturados:** Sistema de logs com rotação de arquivos e saída colorida no console (Loguru).
 - **Extensível:** Arquitetura baseada em classes (`BaseScraper`) para fácil criação de novos scripts.
 
@@ -59,9 +61,14 @@ Siga os passos abaixo para configurar o ambiente de desenvolvimento.
     EPROC_LOGIN="seu_login_aqui"
     EPROC_SENHA="sua_senha_aqui"
     
-    # Opcionais (valores padrão)
+    # 2FA (Opcional - para login automático)
+    # IMPORTANTE: A chave secreta NÃO deve conter espaços.
+    EPROC_2FA_SECRET="SUACHAVESECRETAAQUI" 
+    
+    # Configurações Opcionais
     EPROC_URL="https://eproc1.tjto.jus.br/eprocV2_prod_1grau/"
     HEADLESS=True
+    BROWSER_CHANNEL="chrome" # chrome, msedge, chromium
     LOG_LEVEL="INFO"
     ```
 
@@ -82,14 +89,15 @@ Ideal para execuções pontuais e testes. Execute o script principal usando o m�
 
 **Scripts Disponíveis:**
 
-- **`exemplo_extracao`**: Um tutorial interativo que demonstra como usar o Playwright (navegação, seletores, ações). Ótimo para aprendizado.
-- **`loc_peticoes`**: Script para extração da lista de processos do localizador PETIÇÕES.
+- **`exemplo_extracao`**: Tutorial interativo do Playwright.
+- **`loc_peticoes`**: Extração de processos do localizador PETIÇÕES.
+- **`test_2fa`**: Utilitário para testar se sua chave 2FA está gerando o código correto.
 
 **Exemplos:**
 
-- **Rodar o tutorial de exemplo:**
+- **Testar geração do código 2FA:**
   ```bash
-  python -m src.main --script exemplo_extracao --show-browser
+  python -m src.scripts.test_2fa
   ```
 
 - **Rodar a extração de petições:**

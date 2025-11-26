@@ -6,3 +6,4 @@ mkdocs-material
 python-dotenv
 loguru
 pydantic-settings
+pyotp
