@@ -13,6 +13,7 @@ import argparse
 import importlib.util
 import inspect
 import sys
+import os
 from pathlib import Path
 from typing import Type
 
@@ -62,8 +63,21 @@ async def execute_script(script_name: str, headless: bool = True) -> ScraperResu
         raise e
 
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=headless)
-        page = await browser.new_page()
+        browser = await p.chromium.launch(
+            headless=headless,
+            channel=settings.BROWSER_CHANNEL
+        )
+        # Configura o contexto do navegador (cookies, sessão, etc)
+        # Tenta carregar o estado da sessão se existir
+        storage_state_path = "state.json"
+        if os.path.exists(storage_state_path):
+            logger.info(f"Carregando sessão existente de '{storage_state_path}'")
+            context = await browser.new_context(storage_state=storage_state_path)
+        else:
+            logger.info("Iniciando nova sessão (sem estado salvo)")
+            context = await browser.new_context()
+            
+        page = await context.new_page()
         try:
             logger.info(f"Iniciando execução do script '{script_name}'...")
             result = await scraper.run(page)
