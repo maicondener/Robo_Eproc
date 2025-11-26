@@ -11,7 +11,8 @@ class ExemploScraper(BaseScraper):
         self.logger.info("Executando script de exemplo...")
         
         try:
-            await page.goto("http://example.com")
+            # Navega para a URL configurada no .env (EPROC_URL)
+            await self.navigate_to_home(page)
             
             self.logger.info("Aguardando 2 segundos...")
             time.sleep(2) # Usando sleep síncrono para simples demonstração

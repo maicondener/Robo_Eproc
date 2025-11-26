@@ -3,6 +3,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     EPROC_LOGIN: str
     EPROC_SENHA: str
+    EPROC_URL: str = "https://eproc.tjto.jus.br/"
     HEADLESS: bool = True
     LOG_LEVEL: str = "INFO"
 
