@@ -5,17 +5,19 @@ O **Robô de Extração Eproc** é uma ferramenta de automação desenvolvida pa
 ## ✨ Principais Características
 
 - **Dupla Interface:** Execute automações através de uma API RESTful (FastAPI) ou diretamente no terminal.
-- **Gerenciamento Seguro de Credenciais:** Utiliza arquivos `.env` para gerenciar login e senha de forma segura, sem expor dados sensíveis no código.
-- **Automação Moderna:** Construído com [Playwright](https://playwright.dev/python/) para uma automação web robusta e confiável.
-- **Extensível:** Facilmente expansível com novos scripts de automação para diferentes tarefas.
+- **Gerenciamento Seguro de Credenciais:** Utiliza arquivos `.env` validados pelo Pydantic para gerenciar configurações.
+- **Automação Moderna:** Construído com [Playwright](https://playwright.dev/python/) para uma automação web robusta.
+- **Logs Estruturados:** Sistema de logs com rotação de arquivos e saída colorida no console (Loguru).
+- **Extensível:** Arquitetura baseada em classes (`BaseScraper`) para fácil criação de novos scripts.
 
 ## 🛠️ Tecnologias Utilizadas
 
 - **Linguagem:** Python 3.10+
 - **Framework API:** FastAPI
 - **Automação Web:** Playwright
+- **Configuração:** Pydantic Settings
+- **Logs:** Loguru
 - **Servidor ASGI:** Uvicorn
-- **Variáveis de Ambiente:** Python-Dotenv
 
 ## ⚙️ Configuração do Ambiente
 
@@ -46,16 +48,18 @@ Siga os passos abaixo para configurar o ambiente de desenvolvimento.
     ```
 
 3.  **Crie o arquivo de credenciais:**
-    Crie um arquivo chamado `.env` na raiz do projeto, copiando o modelo abaixo. Este arquivo guardará suas credenciais de forma segura.
+    Crie um arquivo chamado `.env` na raiz do projeto.
     ```ini
     # .env
     EPROC_LOGIN="seu_login_aqui"
     EPROC_SENHA="sua_senha_aqui"
+    
+    # Opcionais (valores padrão)
+    HEADLESS=True
+    LOG_LEVEL="INFO"
     ```
-    > **Importante:** O arquivo `.env` já está no `.gitignore`, então suas credenciais nunca serão enviadas para o repositório.
 
 4.  **Instale as dependências e os navegadores:**
-    Com o ambiente ativado, execute os dois comandos abaixo:
     ```bash
     # Instala as bibliotecas Python
     pip install -r requirements.txt
@@ -70,16 +74,16 @@ Siga os passos abaixo para configurar o ambiente de desenvolvimento.
 
 Ideal para execuções pontuais e testes.
 
-- Execute o script principal `main.py` com o argumento `--script`, passando o nome do arquivo (sem `.py`) que está na pasta `src/scripts/`.
+- Execute o script principal usando o módulo `src.main`:
 
-- **Exemplo (executando `exemplo_extracao.py`):**
+- **Exemplo (executando `exemplo_extracao`):**
   ```bash
-  python src/main.py --script exemplo_extracao
+  python -m src.main --script exemplo_extracao
   ```
 
-- **Para visualizar o navegador durante a execução**, adicione a flag `--show-browser`:
+- **Para visualizar o navegador**, adicione a flag `--show-browser`:
   ```bash
-  python src/main.py --script exemplo_extracao --show-browser
+  python -m src.main --script exemplo_extracao --show-browser
   ```
 
 ### 2. Via API Web
@@ -93,34 +97,36 @@ A API permite integrar o robô a outros sistemas.
     O servidor estará disponível em `http://127.0.0.1:8000`.
 
 2.  **Acesse a documentação:**
-    Acesse [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs) para ver a documentação interativa do Swagger UI.
+    Acesse [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs) para ver a documentação interativa (Swagger UI).
 
 3.  **Execute um script via API:**
-    Use uma ferramenta como `curl` ou o próprio Swagger UI para fazer uma requisição `POST` ao endpoint `/run/{script_name}`.
-
-    - **Exemplo com `curl`:**
-      ```bash
-      curl -X POST http://127.0.0.1:8000/run/exemplo_extracao -H "accept: application/json"
-      ```
+    Faça uma requisição `POST` ao endpoint `/run/{script_name}`.
 
 ## 🤖 Adicionando Novos Scripts
 
-1.  Crie um novo arquivo Python na pasta `src/scripts/`.
-2.  Dentro do arquivo, defina uma função assíncrona chamada `run`, que recebe um objeto `page` do Playwright como argumento.
+1.  Crie um novo arquivo Python na pasta `src/scripts/` (ex: `meu_script.py`).
+2.  Importe `BaseScraper` e `ScraperResult`.
+3.  Crie uma classe que herde de `BaseScraper` e implemente o método `run`.
+
     ```python
-    # src/scripts/meu_novo_script.py
-    import os
-    from playwright.async_api import Page, expect
+    # src/scripts/meu_script.py
+    from playwright.async_api import Page
+    from src.scripts.base import BaseScraper, ScraperResult
 
-    async def run(page: Page) -> dict:
-        # Acesse as credenciais de forma segura
-        login = os.getenv("EPROC_LOGIN")
-        senha = os.getenv("EPROC_SENHA")
+    class MeuScript(BaseScraper):
+        async def run(self, page: Page) -> ScraperResult:
+            self.logger.info("Iniciando meu script...")
+            
+            # Use self.login(page) se precisar logar
+            # await self.login(page)
 
-        # ... seu código de automação aqui ...
-        await page.goto("https://eproc.tjto.jus.br/")
-        # Exemplo: preencher login e senha
-        
-        return {"status": "sucesso", "dados": "..."}
+            await page.goto("https://eproc.tjto.jus.br/")
+            title = await page.title()
+            
+            return ScraperResult(
+                success=True,
+                data={"titulo": title},
+                message="Sucesso!"
+            )
     ```
-3.  Execute seu novo script pela CLI ou API usando o nome do arquivo (ex: `meu_novo_script`).
+4.  Execute: `python -m src.main --script meu_script`
