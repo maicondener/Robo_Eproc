@@ -65,6 +65,10 @@ Siga os passos abaixo para configurar o ambiente de desenvolvimento.
     # IMPORTANTE: A chave secreta NÃO deve conter espaços.
     EPROC_2FA_SECRET="SUACHAVESECRETAAQUI" 
     
+    # Perfil (Opcional - se houver múltipla escolha)
+    # Ex: DIRETOR DE SECRETARIA, MAGISTRADO, etc.
+    EPROC_PERFIL="DIRETOR DE SECRETARIA"
+
     # Configurações Opcionais
     EPROC_URL="https://eproc1.tjto.jus.br/eprocV2_prod_1grau/"
     HEADLESS=True
@@ -95,6 +99,7 @@ Ideal para execuções pontuais e testes. Execute o script principal usando o m�
     - Identifica e percorre todas as páginas (paginação automática).
     - Extrai números de processos (formato CNJ) usando Regex.
     - Filtra duplicatas e processos fora da tabela principal.
+    - **Exportação:** Salva os números limpos (apenas dígitos) em `data/processos_peticao.csv`.
 - **`test_2fa`**: Utilitário para testar se sua chave 2FA está gerando o código correto.
 
 **Exemplos:**

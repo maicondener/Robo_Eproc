@@ -129,9 +129,36 @@ class BaseScraper(ABC):
             except Exception as e:
                 self.logger.debug(f"Nenhum desafio 2FA detectado ou erro ao processar: {e}")
 
-            # Aguarda navegação ou elemento que confirme o login
-            # await page.wait_for_url("**/home**") # Exemplo
-            
+            # --- SELEÇÃO DE PERFIL (Opcional) ---
+            if settings.EPROC_PERFIL:
+                self.logger.info(f"Verificando seleção de perfil: '{settings.EPROC_PERFIL}'...")
+                try:
+                    # Tenta encontrar o perfil em um botão ou link (conforme relato do usuário)
+                    # Usa um seletor combinado para achar qualquer um dos dois
+                    perfil_selector = f"button:has-text('{settings.EPROC_PERFIL}'), a:has-text('{settings.EPROC_PERFIL}')"
+                    
+                    # Aguarda um pouco para ver se a tela de perfil aparece
+                    try:
+                        # Timeout curto para detecção
+                        await page.wait_for_selector(perfil_selector, timeout=1000)
+                        self.logger.info(f"Perfil '{settings.EPROC_PERFIL}' encontrado. Clicando...")
+                        
+                        # Clica e aguarda a navegação acontecer
+                        await page.click(perfil_selector)
+                        await page.wait_for_load_state("networkidle")
+                        
+                    except Exception:
+                        self.logger.debug(f"Perfil '{settings.EPROC_PERFIL}' não encontrado como botão/link ou não foi necessário selecionar.")
+                        # Tenta fallback genérico se não achou
+                        try:
+                             await page.click(f"text={settings.EPROC_PERFIL}", timeout=1000)
+                             await page.wait_for_load_state("networkidle")
+                        except:
+                             pass
+                        
+                except Exception as e:
+                    self.logger.warning(f"Erro ao tentar selecionar perfil: {e}")
+
             self.logger.info(f"Login realizado para usuário: {settings.EPROC_LOGIN}")
             
             # Salva o estado da sessão (cookies, storage) para próximas execuções
