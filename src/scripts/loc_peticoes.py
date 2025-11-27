@@ -2,6 +2,7 @@ import time
 import re
 from playwright.async_api import Page
 from src.scripts.base import BaseScraper, ScraperResult
+from src.utils.csv_handler import save_to_csv
 
 class LocPeticoes(BaseScraper):
     async def run(self, page: Page) -> ScraperResult:
@@ -101,11 +102,18 @@ class LocPeticoes(BaseScraper):
             processos_unicos = list(set(processos_encontrados))
             self.logger.info(f"Total de processos únicos extraídos: {len(processos_unicos)}")
 
+            # Salva em CSV
+            csv_path = save_to_csv(processos_unicos, filename="processos_peticao.csv")
+
             execution_time = time.time() - start_time
             return ScraperResult(
                 success=True,
-                data={"processos": processos_unicos, "total": len(processos_unicos)},
-                message="Extração concluída com sucesso",
+                data={
+                    "processos": processos_unicos, 
+                    "total": len(processos_unicos),
+                    "csv_path": csv_path
+                },
+                message=f"Extração concluída. CSV salvo em: {csv_path}",
                 execution_time=execution_time
             )
 
