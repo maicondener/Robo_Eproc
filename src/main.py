@@ -47,7 +47,9 @@ def load_scraper_class(script_name: str) -> Type[BaseScraper]:
     # Encontrar a classe que herda de BaseScraper
     for name, obj in inspect.getmembers(script_module):
         if inspect.isclass(obj) and issubclass(obj, BaseScraper) and obj is not BaseScraper:
-            return obj
+            # Garante que a classe foi definida no próprio script e não importada
+            if obj.__module__ == script_module.__name__:
+                return obj
     
     raise AttributeError(f"Nenhuma subclasse de BaseScraper encontrada em '{script_name}.py'.")
 

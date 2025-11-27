@@ -1,182 +1,27 @@
 # Bem-vindo ao Robô de Extração Eproc
 
-O **Robô de Extração Eproc** é uma ferramenta de automação desenvolvida para extrair dados e realizar tarefas no sistema Eproc. A solução é flexível, permitindo a execução de scripts tanto via uma API web quanto por uma interface de linha de comando (CLI).
+O **Robô de Extração Eproc** é uma ferramenta profissional de automação desenvolvida para extrair dados e realizar tarefas no sistema Eproc do TJTO.
+
+## 📚 Documentação
+
+A documentação foi dividida em seções para facilitar o acesso:
+
+- **[⚙️ Configuração e Instalação](setup.md)**: Guia passo a passo para instalar o Python, configurar o ambiente virtual e definir as credenciais (incluindo 2FA e Perfil).
+- **[🚀 Como Usar](usage.md)**: Instruções de execução via Linha de Comando (CLI) e API, lista de scripts disponíveis e formato dos dados extraídos.
+- **[💻 Desenvolvimento e Arquitetura](development.md)**: Detalhes técnicos sobre a estrutura do projeto e como criar novos scripts de automação.
 
 ## ✨ Principais Características
 
-- **Dupla Interface:** Execute automações através de uma API RESTful (FastAPI) ou diretamente no terminal.
-- **Autenticação Avançada:** Suporte a **2FA (Autenticação de Dois Fatores)** automático via TOTP.
-- **Persistência de Sessão:** Reutiliza cookies e sessão (`state.json`) para evitar logins repetitivos e bloqueios.
-- **Gerenciamento Seguro de Credenciais:** Utiliza arquivos `.env` validados pelo Pydantic.
-- **Automação Moderna:** Construído com [Playwright](https://playwright.dev/python/) (configurável para Chrome/Edge).
-- **Logs Estruturados:** Sistema de logs com rotação de arquivos e saída colorida no console (Loguru).
-- **Extensível:** Arquitetura baseada em classes (`BaseScraper`) para fácil criação de novos scripts.
+- **Automação Robusta:** Construído com [Playwright](https://playwright.dev/python/), capaz de lidar com sites dinâmicos modernos.
+- **Autenticação Completa:** Suporte nativo a **2FA (TOTP)** e seleção automática de **Perfil de Usuário**.
+- **Sessão Persistente:** Reutiliza a sessão de login para evitar autenticações desnecessárias e bloqueios.
+- **Extensível:** Arquitetura modular que permite criar novos robôs de extração com pouquíssimas linhas de código.
+- **API Integrada:** Inclui uma API REST (FastAPI) para integração com outros sistemas.
 
-## 🛠️ Tecnologias Utilizadas
+## 🛠️ Tecnologias
 
-- **Linguagem:** Python 3.10+
-- **Framework API:** FastAPI
-- **Automação Web:** Playwright
-- **Configuração:** Pydantic Settings
-- **Logs:** Loguru
-- **Servidor ASGI:** Uvicorn
-
-## ⚙️ Configuração do Ambiente
-
-Siga os passos abaixo para configurar o ambiente de desenvolvimento.
-
-### 1. Pré-requisitos
-- [Python](https://www.python.org/downloads/) (versão 3.10 ou superior)
-- [Git](https://git-scm.com/downloads/)
-
-### 2. Instalação
-
-1.  **Clone o repositório:**
-    ```bash
-    git clone <URL_DO_REPOSITORIO>
-    cd Robo_Eproc
-    ```
-
-2.  **Crie e ative um ambiente virtual:**
-    ```bash
-    # Crie o ambiente
-    python -m venv .venv
-
-    # Ative (Windows)
-    .venv\Scripts\activate
-    
-    # Ative (macOS/Linux)
-    source .venv/bin/activate
-    ```
-
-3.  **Crie o arquivo de credenciais:**
-    Copie o arquivo de exemplo `.env.example` para `.env` e preencha com suas credenciais.
-    ```bash
-    cp .env.example .env
-    ```
-    
-    Edite o arquivo `.env`:
-    ```ini
-    # .env
-    EPROC_LOGIN="seu_login_aqui"
-    EPROC_SENHA="sua_senha_aqui"
-    
-    # 2FA (Opcional - para login automático)
-    # IMPORTANTE: A chave secreta NÃO deve conter espaços.
-    EPROC_2FA_SECRET="SUACHAVESECRETAAQUI" 
-    
-    # Perfil (Opcional - se houver múltipla escolha)
-    # Ex: DIRETOR DE SECRETARIA, MAGISTRADO, etc.
-    EPROC_PERFIL="DIRETOR DE SECRETARIA"
-
-    # Configurações Opcionais
-    EPROC_URL="https://eproc1.tjto.jus.br/eprocV2_prod_1grau/"
-    HEADLESS=True
-    BROWSER_CHANNEL="chrome" # chrome, msedge, chromium
-    LOG_LEVEL="INFO"
-    ```
-
-4.  **Instale as dependências e os navegadores:**
-    ```bash
-    # Instala as bibliotecas Python
-    pip install -r requirements.txt
-
-    # Baixa os navegadores para o Playwright
-    playwright install
-    ```
-
-## 🚀 Como Usar
-
-### 1. Via Linha de Comando (CLI)
-
-Ideal para execuções pontuais e testes. Execute o script principal usando o módulo `src.main`.
-
-**Scripts Disponíveis:**
-
-- **`exemplo_extracao`**: Tutorial interativo do Playwright.
-- **`loc_peticoes`**: Extração automática de processos do localizador "PETIÇÃO".
-    - Navega até a lista de processos.
-    - Identifica e percorre todas as páginas (paginação automática).
-    - Extrai números de processos (formato CNJ) usando Regex.
-    - Filtra duplicatas e processos fora da tabela principal.
-    - **Exportação:** Salva os números limpos (apenas dígitos) em `data/processos_peticao.csv`.
-- **`test_2fa`**: Utilitário para testar se sua chave 2FA está gerando o código correto.
-
-**Exemplos:**
-
-- **Testar geração do código 2FA:**
-  ```bash
-  python -m src.scripts.test_2fa
-  ```
-
-- **Rodar a extração de petições:**
-  ```bash
-  python -m src.main --script loc_peticoes
-  ```
-
-### 2. Via API Web
-
-A API permite integrar o robô a outros sistemas.
-
-1.  **Inicie o servidor:**
-    ```bash
-    uvicorn src.main:app --reload
-    ```
-    O servidor estará disponível em `http://127.0.0.1:8000`.
-
-2.  **Acesse a documentação:**
-    Acesse [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs) para ver a documentação interativa (Swagger UI).
-
-3.  **Execute um script via API:**
-    Faça uma requisição `POST` ao endpoint `/run/{script_name}`.
-
-## 🤖 Adicionando Novos Scripts
-
-1.  Crie um novo arquivo Python na pasta `src/scripts/` (ex: `meu_script.py`).
-2.  Importe `BaseScraper` e `ScraperResult`.
-3.  Crie uma classe que herde de `BaseScraper` e implemente o método `run`.
-
-    ```python
-    # src/scripts/meu_script.py
-    from playwright.async_api import Page
-    from src.scripts.base import BaseScraper, ScraperResult
-
-    class MeuScript(BaseScraper):
-        async def run(self, page: Page) -> ScraperResult:
-            self.logger.info("Iniciando meu script...")
-            
-            # Navega para a URL configurada no .env
-            await self.navigate_to_home(page)
-
-            # ... sua lógica de automação ...
-            title = await page.title()
-            
-            return ScraperResult(
-                success=True,
-                data={"titulo": title},
-                message="Sucesso!"
-            )
-    ```
-4.  Execute: `python -m src.main --script meu_script`
-
-## 📁 Estrutura do Projeto
-
-```
-Robo_Eproc/
-├── .venv/                # Ambiente virtual
-├── docs/                 # Documentação (MkDocs)
-├── logs/                 # Arquivos de log rotacionados
-├── src/
-│   ├── scripts/          # Scripts de automação
-│   │   ├── base.py       # Classe BaseScraper
-│   │   ├── exemplo_extracao.py # Tutorial Playwright
-│   │   └── loc_peticoes.py     # Extração de Petições
-│   ├── config.py         # Configurações (Pydantic)
-│   ├── logger.py         # Configuração de Logs
-│   └── main.py           # Ponto de entrada (API e CLI)
-├── .env                  # Variáveis de ambiente (Ignorado pelo Git)
-├── .env.example          # Modelo de variáveis de ambiente
-├── mkdocs.yml            # Configuração MkDocs
-├── README.md             # Este arquivo
-└── requirements.txt      # Dependências
-```
+- **Python 3.10+**
+- **Playwright** (Automação Web)
+- **FastAPI** (Interface API)
+- **Pydantic** (Gestão de Configuração)
+- **Loguru** (Logs Estruturados)
