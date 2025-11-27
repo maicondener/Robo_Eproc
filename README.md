@@ -90,7 +90,11 @@ Ideal para execuções pontuais e testes. Execute o script principal usando o m�
 **Scripts Disponíveis:**
 
 - **`exemplo_extracao`**: Tutorial interativo do Playwright.
-- **`loc_peticoes`**: Extração de processos do localizador PETIÇÕES.
+- **`loc_peticoes`**: Extração automática de processos do localizador "PETIÇÃO".
+    - Navega até a lista de processos.
+    - Identifica e percorre todas as páginas (paginação automática).
+    - Extrai números de processos (formato CNJ) usando Regex.
+    - Filtra duplicatas e processos fora da tabela principal.
 - **`test_2fa`**: Utilitário para testar se sua chave 2FA está gerando o código correto.
 
 **Exemplos:**
