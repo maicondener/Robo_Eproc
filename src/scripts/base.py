@@ -86,46 +86,40 @@ class BaseScraper(ABC):
             await pwd_field.press("Enter")
             
             # --- TRATAMENTO DE 2FA (TOTP) ---
-            # Verifica se apareceu o campo de 2FA (adapte o seletor conforme o sistema real)
-            # Exemplo: campo com name="txtToken" ou placeholder="Código"
+            # Verifica se apareceu o campo de 2FA
             try:
-                # Espera um pouco para ver se cai na tela de 2FA ou se já logou
-                # Ajuste o timeout conforme a velocidade do sistema
-                # await page.wait_for_url("**/*2fa*", timeout=3000) 
-                
-                # Seletor hipotético para o campo de código 2FA
-                # two_fa_field = page.locator("#txtToken") 
-                
-                # Se encontrar o campo e tivermos o segredo configurado
-                # Se encontrar o campo e tivermos o segredo configurado
                 if settings.EPROC_2FA_SECRET:
-                    
-                    # Tenta encontrar o campo de 2FA pelo ID fornecido
-                    two_fa_field = page.locator("#txtAcessoCodigo")
-                    
-                    # Aguarda o campo aparecer (pode levar um tempo após o Enter)
-                    try:
-                        self.logger.info("Aguardando campo de 2FA...")
-                        await two_fa_field.wait_for(state="visible", timeout=5000)
-                    except Exception:
-                        self.logger.debug("Campo #txtAcessoCodigo não apareceu em 5s.")
+                    self.logger.info("Verificando a necessidade de autenticação de dois fatores (2FA)...")
 
-                    # Se não achar pelo ID padrão, tenta outros padrões
-                    if not await two_fa_field.is_visible():
-                         two_fa_field = page.get_by_placeholder("Código", exact=False)
+                    # Seletor combinado que tenta encontrar o campo 2FA de várias maneiras
+                    combined_selector = (
+                        "#txtAcessoCodigo, "
+                        "input[placeholder*='Código' i], "
+                        "input[name*='token' i]"
+                    )
                     
-                    if not await two_fa_field.is_visible():
-                         two_fa_field = page.locator("input[name*='token' i]")
+                    two_fa_field = page.locator(combined_selector)
+                    
+                    try:
+                        # Espera pelo campo aparecer com um timeout razoável
+                        self.logger.info("Aguardando campo de 2FA...")
+                        await two_fa_field.wait_for(state="visible", timeout=7000)
+                    except Exception:
+                        # Se o campo não aparecer, provavelmente o login ocorreu sem 2FA ou falhou antes
+                        self.logger.debug("Campo de 2FA não foi exibido em 7s. Prosseguindo...")
+                        # A verificação de login ocorrerá naturalmente depois
 
                     if await two_fa_field.is_visible():
+                        self.logger.info("Campo de 2FA encontrado. Preenchendo código...")
                         totp = pyotp.TOTP(settings.EPROC_2FA_SECRET)
                         code = totp.now()
                         self.logger.info(f"Gerando código 2FA: {code}")
+                        
                         await two_fa_field.fill(code)
                         await two_fa_field.press("Enter")
                     else:
-                        self.logger.warning("Campo de 2FA não encontrado automaticamente. Verifique o seletor.")
-                
+                        self.logger.warning("Campo de 2FA não foi encontrado. O login pode ter falhado ou não foi necessário 2FA.")
+
             except Exception as e:
                 self.logger.debug(f"Nenhum desafio 2FA detectado ou erro ao processar: {e}")
 

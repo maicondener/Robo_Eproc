@@ -47,9 +47,15 @@ python -m src.main --script loc_peticao_inicial
 ```
 
 **Extrair processos do localizador "URGENTE":**
+**Extrair Relatório de Processos Conclusos:**
 ```bash
-python -m src.main --script loc_urgente
+python -m src.scripts.relatorio_conclusos
 ```
+Este script extrai a planilha, converte para JSON e envia diretamente para a API do LegalMind.
+
+### 4. Integração LegalMind API
+
+O robô agora está configurado para enviar os dados diretamente para o Core do sistema LegalMind, eliminando a necessidade de gestão manual de arquivos CSV.
 
 ## ✨ Features
 

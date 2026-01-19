@@ -10,11 +10,10 @@ class LocBaseScraper(BaseScraper):
     As subclasses devem definir LOCATOR_NAME e OUTPUT_FILENAME.
     """
     LOCATOR_NAME: str = ""       # Ex: "PETIÇÃO"
-    OUTPUT_FILENAME: str = ""    # Ex: "processos_peticao.csv"
 
     async def run(self, page: Page) -> ScraperResult:
-        if not self.LOCATOR_NAME or not self.OUTPUT_FILENAME:
-            raise ValueError("As subclasses de LocBaseScraper devem definir LOCATOR_NAME e OUTPUT_FILENAME.")
+        if not self.LOCATOR_NAME:
+            raise ValueError("As subclasses de LocBaseScraper devem definir LOCATOR_NAME.")
 
         start_time = time.time()
         self.logger.info(f"Executando a extração dos processos do localizador '{self.LOCATOR_NAME}'.")
@@ -100,17 +99,26 @@ class LocBaseScraper(BaseScraper):
             processos_unicos = list(set(processos_encontrados))
             self.logger.info(f"Total de processos únicos extraídos: {len(processos_unicos)}")
 
-            csv_path = save_to_csv(processos_unicos, filename=self.OUTPUT_FILENAME)
+            # --- INTEGRAÇÃO LEGALMIND (Fluxo Primário) ---
+            integrado = False
+            msg_integracao = "Integração não realizada."
+            try:
+                from src.utils.integracao_legalmind import enviar_para_legalmind
+                integrado = enviar_para_legalmind(processos_unicos, localizador=self.LOCATOR_NAME)
+                msg_integracao = "Processos enviados com sucesso para o LegalMind Core." if integrado else "Falha ao enviar processos para a API."
+            except Exception as ie:
+                self.logger.error(f"Erro na integração direta: {ie}")
+                msg_integracao = f"Erro técnico na integração: {ie}"
 
             execution_time = time.time() - start_time
             return ScraperResult(
-                success=True,
+                success=integrado, # Agora o sucesso do scraper depende da integração
                 data={
                     "processos": processos_unicos, 
                     "total": len(processos_unicos),
-                    "csv_path": csv_path
+                    "integrado": integrado
                 },
-                message=f"Extração concluída. CSV salvo em: {csv_path}",
+                message=f"Extração concluída. {msg_integracao}",
                 execution_time=execution_time
             )
 

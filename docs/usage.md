@@ -32,18 +32,12 @@ Atualmente, o robô possui os seguintes scripts de extração:
 | **`loc_urgente`** | Extrai processos do localizador **"URGENTE"**. | `data/processos_urgente.csv` |
 | **`exemplo_extracao`** | Script de demonstração/tutorial. | N/A |
 
-### 📂 Saída de Dados (CSV)
+### 📂 Saída de Dados (Integração Direta)
 
-Os scripts de extração salvam os resultados na pasta `data/`.
-O arquivo CSV gerado contém uma única coluna chamada `numero_processo`, com os números formatados (apenas dígitos) e sem duplicatas.
+Os scripts agora são configurados para enviar os dados **diretamente para a API do LegalMind**.
+Embora arquivos CSV ainda possam ser gerados como backup em `data/`, o fluxo principal de trabalho é a ingestão automática pelo sistema Core.
 
-Exemplo de conteúdo (`processos_peticao.csv`):
-```csv
-numero_processo
-50001234520248272729
-50009876520238272700
-...
-```
+A integração é realizada através do módulo `src.utils.integracao_legalmind`, utilizando as variáveis de ambiente `LEGALMIND_API_URL` e `LEGALMIND_API_TOKEN`.
 
 ---
 
