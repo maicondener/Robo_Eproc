@@ -13,6 +13,9 @@ class Settings(BaseSettings):
     BROWSER_CHANNEL: str = "chrome" # chrome, msedge, chromium
     LOG_LEVEL: str = "INFO"
 
+    # Integração LegalMind Core
+    LEGALMIND_API_URL: str = "http://localhost:8000/api/v1/"
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
