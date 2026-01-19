@@ -70,31 +70,10 @@ class RelatorioConclusos(BaseScraper):
             await download.save_as(temp_path)
             self.logger.info(f"Download concluído: {temp_path}")
 
-            # 6. Converter para CSV e Salvar no G Drive
-            self.logger.info("Convertendo para CSV...")
-            
-            # Ler Excel (usa openpyxl via pandas)
+            # Carrega o Excel para o DataFrame
             df = pd.read_excel(temp_path)
-            
-            # Salvar CSV
-            # Certifica-se que o diretório destino existe (G drive deve estar montado)
-            output_dir = os.path.dirname(self.output_csv_path)
-            if not os.path.exists(output_dir) and os.path.exists("G:\\"):
-                # Se G existe mas a pasta não, tenta criar (embora G: geralmente seja drive virtual)
-                try:
-                    os.makedirs(output_dir, exist_ok=True)
-                except:
-                    pass
 
-            # Salva
-            df.to_csv(self.output_csv_path, index=False, encoding='utf-8')
-            self.logger.info(f"Arquivo salvo em: {self.output_csv_path}")
-
-            # Limpa temporário
-            if os.path.exists(temp_path):
-                os.remove(temp_path)
-
-            # 7. Integrar com LegalMind Core (Nova Tabela)
+            # 6. Integrar com LegalMind Core
             self.logger.info("Integrando dados com o LegalMind Core...")
             try:
                 from src.utils.integracao_legalmind import enviar_relatorio_concluso
@@ -102,33 +81,52 @@ class RelatorioConclusos(BaseScraper):
                 records = []
                 # Converter DataFrame para lista de dicionários para a API
                 for _, row in df.iterrows():
-                    # Normaliza colunas comuns do Eproc
+                    # Normaliza colunas mapeando do Excel do Eproc (19 colunas)
                     records.append({
-                        "numero_processo": str(row.get('Processo', row.get('Nº do Processo', ''))),
-                        "magistrado": str(row.get('Magistrado', '')),
-                        "dias_conclusos": int(row.get('Dias', row.get('Qt. Dias', 0))) if pd.notnull(row.get('Dias', row.get('Qt. Dias'))) else 0,
+                        "localidade": str(row.get('LOCALIDADE', '')),
+                        "vara": str(row.get('VARA', '')),
+                        "competencia": str(row.get('COMPETENCIA', '')),
+                        "numero_processo": str(row.get('PROCESSO', row.get('Nº do Processo', ''))),
+                        "data_autuacao": str(row.get('DATA_AUTUACAO', '')),
+                        "classe": str(row.get('CLASSE', '')),
+                        "codigo_classe": str(row.get('CODIGO_CLASSE', '')),
+                        "situacao_classe": str(row.get('SITUACAO_CLASSE', '')),
+                        "assunto": str(row.get('ASSUNTO', '')),
+                        "codigo_assunto": str(row.get('CODIGO_ASSUNTO', '')),
+                        "movimento": str(row.get('MOVIMENTO', '')),
+                        "codigo_movimento": str(row.get('CODIGO_MOVIMENTO', '')),
+                        "data_movimento": str(row.get('DATA_MOVIMENTO', '')),
+                        "dias_conclusos": int(row.get('DIAS', 0)) if pd.notnull(row.get('DIAS')) else 0,
+                        "parte_autora": str(row.get('PARTE_AUTORA', '')),
+                        "parte_reu": str(row.get('PARTE_REU', '')),
+                        "ultimo_localizador": str(row.get('ULTIMO LOCALIZADOR', '')),
+                        "pessoa_situacao_rua": str(row.get('PESSOA EM SITUACAO DE RUA', '')),
+                        "magistrado": str(row.get('MAGISTRADO', '')),
+                        
+                        # Campos Extras/Derivados
+                        "tipo_conclusao": str(row.get('TIPO', '')), # Pode não existir neste layout novo, mas mantemos
+                        "data_conclusao": str(row.get('DATA DA CONCLUSÃO', '')), # Idem
+                        "observacao": str(row.get('OBSERVAÇÕES', '')), # Idem
+                        
                         "dados_snapshot": row.dropna().to_dict() # Remove NaNs para o JSON
                     })
                 
-                enviar_relatorio_concluso(records)
+                success = enviar_relatorio_concluso(records)
             except Exception as ie:
                 self.logger.error(f"Falha na integração com LegalMind: {ie}")
+                success = False
 
-            # 8. Webhook (Opcional, mantido como redundância)
-            self.logger.info("Enviando Webhook...")
-            payload = [{"nome_planilha": "Processos_Conclusos.csv"}]
-            response = requests.post(self.webhook_url, json=payload, headers={"Content-Type": "application/json"})
-            
-            if response.status_code == 200:
-                self.logger.info("Webhook enviado com sucesso!")
-            else:
-                self.logger.error(f"Erro ao enviar webhook: {response.status_code} - {response.text}")
+            # Limpa temporário
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
 
             execution_time = time.time() - start_time
+            msg_status = "Sucesso" if success else "Falha na API"
+            
             return ScraperResult(
-                success=True,
-                data={"csv_path": self.output_csv_path, "total_processado": len(df)},
-                message=f"Fluxo finalizado. {len(df)} processos enviados para o LegalMind Core.",
+                success=success,
+                data={"total_processado": len(df)},
+                message=f"Fluxo finalizado: {msg_status}. {len(df)} processos processados.",
                 execution_time=execution_time
             )
 
