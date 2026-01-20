@@ -26,7 +26,7 @@ def enviar_para_legalmind(processos: List[str], localizador: str = None):
         response = requests.post(
             url, 
             json=payload,
-            headers={"Authorization": "Bearer valid_token"},
+            headers={"Authorization": settings.LEGALMIND_API_KEY or "Bearer valid_token"},
             timeout=30
         )
         
@@ -58,7 +58,7 @@ def enviar_relatorio_concluso(items: List[dict]):
         response = requests.post(
             url, 
             json=items,
-            headers={"Authorization": "Bearer valid_token"},
+            headers={"Authorization": settings.LEGALMIND_API_KEY or "Bearer valid_token"},
             timeout=60
         )
         

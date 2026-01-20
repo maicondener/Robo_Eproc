@@ -32,6 +32,10 @@ EPROC_LOGIN="seu_usuario"
 EPROC_SENHA="sua_senha"
 EPROC_2FA_SECRET="SUACHAVE2FA" # Opcional
 EPROC_PERFIL="DIRETOR DE SECRETARIA" # Opcional
+
+# Integração LegalMind Core
+LEGALMIND_API_URL="http://localhost:8000/api/v1/"
+LEGALMIND_API_KEY="Bearer ey..." # Gerado via `docker exec -it legalmind_api python create_token.py`
 ```
 
 ### 3. Execução
@@ -56,6 +60,10 @@ Este script extrai a planilha, converte para JSON e envia diretamente para a API
 ### 4. Integração LegalMind API
 
 O robô agora está configurado para enviar os dados diretamente para o Core do sistema LegalMind, eliminando a necessidade de gestão manual de arquivos CSV.
+
+**Para que a integração funcione:**
+1.  O **LegalMind Core** deve estar rodando (`docker-compose up`).
+2.  Você deve gerar um token de autenticação no LegalMind (`create_token.py`) e adicioná-lo ao `.env` deste robô.
 
 ## ✨ Features
 

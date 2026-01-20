@@ -15,6 +15,7 @@ class Settings(BaseSettings):
 
     # Integração LegalMind Core
     LEGALMIND_API_URL: str = "http://localhost:8000/api/v1/"
+    LEGALMIND_API_KEY: Optional[str] = None
 
     model_config = SettingsConfigDict(
         env_file=".env",
