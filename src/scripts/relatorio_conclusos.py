@@ -7,14 +7,15 @@ from playwright.async_api import Page
 from src.scripts.base import BaseScraper, ScraperResult
 from src.logger import logger
 from src.config import settings
+from src.utils.integracao_legalmind import enviar_relatorio_concluso
 
 class RelatorioConclusos(BaseScraper):
     def __init__(self):
         super().__init__()
         # Caminho final do CSV (Google Drive)
-        self.output_csv_path = r"G:\Meu Drive\Processos_Conclusos.csv"
+        self.output_csv_path = settings.RELATORIO_CONCLUSOS_PATH
         # Webhook URL
-        self.webhook_url = "https://n8n.maicondener.dev.br/webhook/planilha-processos-gabinete"
+        self.webhook_url = settings.N8N_WEBHOOK_PLANILHA
 
     async def run(self, page: Page) -> ScraperResult:
         start_time = time.time()
@@ -66,7 +67,9 @@ class RelatorioConclusos(BaseScraper):
                 await page.locator("#divInfraBarraComandosSuperior").get_by_role("button", name="Gerar Excel").click(no_wait_after=True)
             
             download = await download_info.value
-            temp_path = os.path.join(os.getcwd(), "data", "temp_download.xlsx")
+            temp_dir = os.path.join(os.getcwd(), settings.TEMP_DOWNLOAD_DIR)
+            os.makedirs(temp_dir, exist_ok=True)
+            temp_path = os.path.join(temp_dir, "temp_download.xlsx")
             await download.save_as(temp_path)
             self.logger.info(f"Download concluído: {temp_path}")
 
@@ -76,8 +79,6 @@ class RelatorioConclusos(BaseScraper):
             # 6. Integrar com LegalMind Core
             self.logger.info("Integrando dados com o LegalMind Core...")
             try:
-                from src.utils.integracao_legalmind import enviar_relatorio_concluso
-                
                 records = []
                 # Converter DataFrame para lista de dicionários para a API
                 for _, row in df.iterrows():

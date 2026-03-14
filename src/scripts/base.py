@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, Optional
 from pydantic import BaseModel
-from playwright.async_api import Page
+from playwright.async_api import Page, TimeoutError as PlaywrightTimeoutError
 from src.logger import logger
 from src.config import settings
 import pyotp
@@ -23,6 +23,35 @@ class BaseScraper(ABC):
         Recebe uma página do Playwright e retorna um ScraperResult.
         """
         pass
+
+    def log_success(self, message: str):
+        """Helper para registrar sucessos de forma padronizada."""
+        self.logger.info(f"✅ SUCESSO: {message}")
+
+    def log_error(self, message: str, exc: Exception = None):
+        """Helper para registrar erros de forma padronizada."""
+        if exc:
+            self.logger.error(f"❌ ERRO: {message} | Detalhes: {str(exc)}")
+        else:
+            self.logger.error(f"❌ ERRO: {message}")
+
+    async def wait_and_fill(self, page: Page, selector: str, value: str, timeout: int = 5000):
+        """Espera um seletor e preenche seu valor."""
+        try:
+            await page.wait_for_selector(selector, timeout=timeout)
+            await page.fill(selector, value)
+        except Exception as e:
+            self.log_error(f"Não foi possível preencher '{selector}'", e)
+            raise e
+
+    async def wait_and_click(self, page: Page, selector: str, timeout: int = 5000):
+        """Espera um seletor e clica nele."""
+        try:
+            await page.wait_for_selector(selector, timeout=timeout)
+            await page.click(selector)
+        except Exception as e:
+            self.log_error(f"Não foi possível clicar em '{selector}'", e)
+            raise e
 
     async def navigate_to_home(self, page: Page):
         """
@@ -104,7 +133,7 @@ class BaseScraper(ABC):
                         # Espera pelo campo aparecer com um timeout razoável
                         self.logger.info("Aguardando campo de 2FA...")
                         await two_fa_field.wait_for(state="visible", timeout=7000)
-                    except Exception:
+                    except PlaywrightTimeoutError:
                         # Se o campo não aparecer, provavelmente o login ocorreu sem 2FA ou falhou antes
                         self.logger.debug("Campo de 2FA não foi exibido em 7s. Prosseguindo...")
                         # A verificação de login ocorrerá naturalmente depois
@@ -141,13 +170,13 @@ class BaseScraper(ABC):
                         await page.click(perfil_selector)
                         await page.wait_for_load_state("networkidle")
                         
-                    except Exception:
+                    except PlaywrightTimeoutError:
                         self.logger.debug(f"Perfil '{settings.EPROC_PERFIL}' não encontrado como botão/link ou não foi necessário selecionar.")
                         # Tenta fallback genérico se não achou
                         try:
                              await page.click(f"text={settings.EPROC_PERFIL}", timeout=1000)
                              await page.wait_for_load_state("networkidle")
-                        except:
+                        except PlaywrightTimeoutError:
                              pass
                         
                 except Exception as e:

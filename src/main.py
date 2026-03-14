@@ -161,11 +161,20 @@ def main_cli():
     parser = argparse.ArgumentParser(
         description="Robô Eproc TJTO - Executor de Scripts via Linha de Comando."
     )
+    
+    scripts_dir = Path("src/scripts")
+    # Lista scripts disponíveis na pasta (ignorando __init__.py e base.py)
+    available_scripts = [
+        f.stem for f in scripts_dir.glob("*.py")
+        if f.is_file() and not f.name.startswith("__") and f.name != "base.py"
+    ]
+    
     parser.add_argument(
         "--script",
         type=str,
         required=True,
-        help="Nome do script a ser executado (sem a extensão .py).",
+        choices=available_scripts if available_scripts else None,
+        help=f"Nome do script a ser executado. Disponíveis: {', '.join(available_scripts)}",
     )
     parser.add_argument(
         "--show-browser",
