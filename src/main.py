@@ -17,7 +17,8 @@ import os
 from pathlib import Path
 from typing import Type
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Security, Depends
+from fastapi.security import APIKeyHeader
 from playwright.async_api import async_playwright
 
 from src.config import settings
@@ -98,20 +99,44 @@ async def execute_script(script_name: str, headless: bool = True) -> ScraperResu
 # --- MODO API (FastAPI) ---
 
 app = FastAPI(
-    title="Robô Eproc TJTO",
-    description="API para automatizar a extração de dados do sistema eproc do TJTO.",
-    version="0.2.0",
+    title='Robô Eproc TJTO',
+    description='API para automatizar a extração de dados do sistema eproc do TJTO.',
+    version='0.3.0',
 )
 
-@app.get("/", tags=["Root"])
-async def read_root():
-    """Endpoint raiz da API."""
-    if not settings.EPROC_LOGIN or not settings.EPROC_SENHA:
-        logger.warning("Credenciais não configuradas no .env")
-        
-    return {"message": "Bem-vindo à API do Robô Eproc TJTO!", "env": settings.model_dump(include={"LOG_LEVEL", "HEADLESS"})}
+# --- AUTENTICAÇÃO POR API KEY ---
 
-@app.post("/run/{script_name}", response_model=ScraperResult, tags=["Scraper"])
+api_key_header = APIKeyHeader(name='X-API-Key', auto_error=False)
+
+async def verify_api_key(api_key: str = Security(api_key_header)):
+    """
+    Dependência de segurança que valida o header X-API-Key.
+    Se API_KEY não estiver configurada no .env, bloqueia todas as requisições.
+    """
+    if not settings.API_KEY:
+        logger.error('API_KEY não configurada no .env. Acesso negado.')
+        raise HTTPException(
+            status_code=500,
+            detail='API_KEY não configurada no servidor. Configure no .env para habilitar o acesso.'
+        )
+    if not api_key or api_key != settings.API_KEY:
+        logger.warning('Tentativa de acesso com API Key inválida.')
+        raise HTTPException(
+            status_code=401,
+            detail='API Key inválida ou não fornecida. Envie o header X-API-Key.'
+        )
+    return api_key
+
+
+@app.get('/', tags=['Root'])
+async def read_root():
+    """Endpoint raiz da API (sem autenticação)."""
+    if not settings.EPROC_LOGIN or not settings.EPROC_SENHA:
+        logger.warning('Credenciais não configuradas no .env')
+        
+    return {'message': 'Bem-vindo à API do Robô Eproc TJTO!', 'env': settings.model_dump(include={'LOG_LEVEL', 'HEADLESS'})}
+
+@app.post('/run/{script_name}', response_model=ScraperResult, tags=['Scraper'], dependencies=[Depends(verify_api_key)])
 async def run_script_endpoint(script_name: str):
     """
     Endpoint da API para acionar a execução de um script de extração.

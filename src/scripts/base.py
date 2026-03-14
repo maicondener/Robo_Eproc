@@ -113,7 +113,7 @@ class BaseScraper(ABC):
                         self.logger.info("Campo de 2FA encontrado. Preenchendo código...")
                         totp = pyotp.TOTP(settings.EPROC_2FA_SECRET)
                         code = totp.now()
-                        self.logger.info(f"Gerando código 2FA: {code}")
+                        self.logger.debug('Código 2FA gerado com sucesso.')
                         
                         await two_fa_field.fill(code)
                         await two_fa_field.press("Enter")
