@@ -208,3 +208,8 @@ __marimo__/
 
 # Session state
 state.json
+
+# Google Drive service account credentials
+*credentials*.json
+*service_account*.json
+service-account*.json

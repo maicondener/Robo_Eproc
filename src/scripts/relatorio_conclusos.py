@@ -8,6 +8,7 @@ from src.scripts.base import BaseScraper, ScraperResult
 from src.logger import logger
 from src.config import settings
 from src.utils.integracao_legalmind import enviar_relatorio_concluso
+from src.utils.google_drive import upload_to_drive
 
 class RelatorioConclusos(BaseScraper):
     def __init__(self):
@@ -72,6 +73,21 @@ class RelatorioConclusos(BaseScraper):
             temp_path = os.path.join(temp_dir, "temp_download.xlsx")
             await download.save_as(temp_path)
             self.logger.info(f"Download concluído: {temp_path}")
+
+            # 5.1 Fazer upload para Google Drive
+            if settings.GOOGLE_DRIVE_FOLDER_ID:
+                self.logger.info("Enviando planilha para o Google Drive...")
+                try:
+                    nome_arquivo = f"Processos_Conclusos_{time.strftime('%Y%m%d_%H%M%S')}.xlsx"
+                    file_id = upload_to_drive(
+                        file_path=temp_path,
+                        file_name=nome_arquivo
+                    )
+                    self.logger.info(f"Upload para o Drive concluído com sucesso. ID: {file_id}")
+                except Exception as e:
+                    self.logger.error(f"Erro ao enviar para o Google Drive: {e}")
+            else:
+                self.logger.info("GOOGLE_DRIVE_FOLDER_ID não configurado. Pulando upload.")
 
             # Carrega o Excel para o DataFrame
             df = pd.read_excel(temp_path)
