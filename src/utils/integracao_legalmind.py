@@ -2,6 +2,7 @@ import requests
 from typing import List
 from src.logger import logger
 from src.config import settings
+from src.utils.legalmind_startup import ensure_legalmind_running
 
 
 def _get_auth_headers() -> dict:
@@ -24,6 +25,10 @@ def enviar_para_legalmind(processos: List[str], localizador: str = None):
     """
     if not settings.LEGALMIND_API_URL:
         logger.warning('LEGALMIND_API_URL não configurada. Pulando integração.')
+        return False
+
+    if not ensure_legalmind_running(verbose=False):
+        logger.error('LegalMind não pôde ser iniciado. Abortando envio de processos.')
         return False
 
     url = f"{settings.LEGALMIND_API_URL.rstrip('/')}/processos/importar"
@@ -66,6 +71,10 @@ def enviar_relatorio_concluso(items: List[dict]):
     """
     if not settings.LEGALMIND_API_URL:
         logger.warning('LEGALMIND_API_URL não configurada. Pulando integração.')
+        return False
+
+    if not ensure_legalmind_running(verbose=False):
+        logger.error('LegalMind não pôde ser iniciado. Abortando envio de relatório.')
         return False
 
     url = f"{settings.LEGALMIND_API_URL.rstrip('/')}/relatorios/conclusos"

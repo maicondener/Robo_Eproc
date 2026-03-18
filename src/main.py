@@ -24,6 +24,7 @@ from playwright.async_api import async_playwright
 from src.config import settings
 from src.logger import logger
 from src.scripts.base import BaseScraper, ScraperResult
+from src.utils.legalmind_startup import ensure_legalmind_running
 
 # --- LÓGICA CENTRAL DE EXECUÇÃO ---
 
@@ -185,7 +186,14 @@ def main_cli():
 
     # Prioridade: Argumento CLI > Configuração .env
     is_headless = not args.show_browser if args.show_browser else settings.HEADLESS
-    
+
+    logger.info("Verificando disponibilidade da LegalMind API...")
+    if not ensure_legalmind_running(verbose=True):
+        logger.warning(
+            "LegalMind API indisponível. O script será executado, "
+            "mas a integração com LegalMind pode falhar."
+        )
+
     try:
         result = asyncio.run(execute_script(args.script, headless=is_headless))
         print("\n--- Resultado da Execução ---")
