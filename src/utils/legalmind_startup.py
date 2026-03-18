@@ -10,7 +10,7 @@ from src.config import settings
 
 _COMPOSE_PATH_LINUX   = "/mnt/c/LegalMind"
 _COMPOSE_PATH_WINDOWS = r"C:\LegalMind"
-_POLL_RETRIES  = 30   # 30 × 3 s = 90 s máximo
+_POLL_RETRIES  = 100  # 100 × 3 s = 300 s máximo
 _POLL_INTERVAL = 3
 _CONNECT_TIMEOUT = 3
 
@@ -29,7 +29,8 @@ def _api_base_url() -> str:
 
 def _ping_api() -> bool:
     try:
-        resp = requests.get(_api_base_url(), timeout=_CONNECT_TIMEOUT)
+        health_url = f"{_api_base_url()}/api/v1/health/"
+        resp = requests.get(health_url, timeout=_CONNECT_TIMEOUT)
         return resp.status_code < 500
     except Exception:
         return False
