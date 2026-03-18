@@ -30,6 +30,7 @@ Atualmente, o robô possui os seguintes scripts de extração:
 | **`loc_peticoes`** | Extrai processos do localizador **"PETIÇÃO"**. | `data/processos_peticao.csv` |
 | **`loc_peticao_inicial`** | Extrai processos do localizador **"PETIÇÃO INICIAL"**. | `data/processos_peticao_inicial.csv` |
 | **`loc_urgente`** | Extrai processos do localizador **"URGENTE"**. | `data/processos_urgente.csv` |
+| **`relatorio_conclusos`** | Extrai **Relatório de Processos Conclusos** e envia para LegalMind API. | `data/relatorio_conclusos.csv` |
 | **`exemplo_extracao`** | Script de demonstração/tutorial. | N/A |
 
 ### 📂 Saída de Dados (Integração Direta)
