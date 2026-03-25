@@ -64,3 +64,85 @@ def upload_to_drive(file_path: str, file_name: str = None, mime_type: str = 'app
     except Exception as e:
         logger.error(f"Erro ao fazer upload para o Google Drive: {e}")
         return None
+
+def search_file_in_drive(file_name: str) -> str:
+    """Busca um arquivo pelo nome na pasta configurada do Google Drive e retorna seu ID, se existir."""
+    if not settings.GOOGLE_DRIVE_FOLDER_ID:
+        logger.warning("Falta GOOGLE_DRIVE_FOLDER_ID nas configurações.")
+        return None
+
+    service = get_drive_service()
+    if not service:
+        return None
+
+    try:
+        query = f"name='{file_name}' and '{settings.GOOGLE_DRIVE_FOLDER_ID}' in parents and trashed=false"
+        results = service.files().list(
+            q=query, spaces='drive', fields='files(id, name)', supportsAllDrives=True, includeItemsFromAllDrives=True
+        ).execute()
+        
+        items = results.get('files', [])
+        
+        if not items:
+            return None
+            
+        logger.info(f"Arquivo '{file_name}' encontrado no Google Drive com ID: {items[0]['id']}")
+        return items[0]['id']
+        
+    except Exception as e:
+        logger.error(f"Erro ao buscar arquivo no Google Drive: {e}")
+        return None
+
+def download_from_drive(file_id: str, dest_path: str) -> bool:
+    """Faz o download de um arquivo do Google Drive."""
+    import io
+    from googleapiclient.http import MediaIoBaseDownload
+    
+    service = get_drive_service()
+    if not service:
+        return False
+        
+    try:
+        request = service.files().get_media(fileId=file_id)
+        with open(dest_path, 'wb') as fh:
+            downloader = MediaIoBaseDownload(fh, request)
+            done = False
+            while done is False:
+                status, done = downloader.next_chunk()
+                
+        logger.success(f"Download do arquivo {file_id} concluído em {dest_path}.")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Erro ao fazer download do Google Drive: {e}")
+        return False
+
+def update_file_in_drive(file_id: str, file_path: str, mime_type: str = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'):
+    """Atualiza um arquivo existente no Google Drive com um novo conteúdo local."""
+    service = get_drive_service()
+    if not service:
+        return None
+        
+    if not os.path.exists(file_path):
+        logger.error(f"Arquivo não encontrado para upload: {file_path}")
+        return None
+
+    try:
+        media = MediaFileUpload(file_path, mimetype=mime_type, resumable=True)
+        
+        logger.info(f"Iniciando atualização do arquivo {file_id} no Google Drive...")
+        
+        file = service.files().update(
+            fileId=file_id,
+            media_body=media,
+            fields='id',
+            supportsAllDrives=True
+        ).execute()
+        
+        logger.success(f"Atualização concluída com sucesso para o ID: {file.get('id')}")
+        return file.get('id')
+        
+    except Exception as e:
+        logger.error(f"Erro ao atualizar arquivo no Google Drive: {e}")
+        return None
+
