@@ -213,3 +213,6 @@ state.json
 *credentials*.json
 *service_account*.json
 service-account*.json
+
+# Agent
+.agent/
