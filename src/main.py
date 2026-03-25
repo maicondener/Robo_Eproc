@@ -72,14 +72,25 @@ async def execute_script(script_name: str, headless: bool = True) -> ScraperResu
             channel=settings.BROWSER_CHANNEL
         )
         # Configura o contexto do navegador (cookies, sessão, etc)
-        # Tenta carregar o estado da sessão se existir
+        # Tenta carregar o estado da sessão se existir e define User-Agent para evitar erro 403 Forbidden do Nginx/WAF
+        # Viewport de 1920x1080 garante que elementos responsivos (como sidebar e formulários) fiquem visíveis no headless
+        viewport_config = {'width': 1920, 'height': 1080}
+        user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
+        
         storage_state_path = "state.json"
+        
+        context_kwargs = {
+            "viewport": viewport_config,
+            "user_agent": user_agent,
+            "permissions": ["notifications"],
+        }
+        
         if os.path.exists(storage_state_path):
             logger.info(f"Carregando sessão existente de '{storage_state_path}'")
-            context = await browser.new_context(storage_state=storage_state_path)
+            context = await browser.new_context(storage_state=storage_state_path, **context_kwargs)
         else:
             logger.info("Iniciando nova sessão (sem estado salvo)")
-            context = await browser.new_context()
+            context = await browser.new_context(**context_kwargs)
             
         page = await context.new_page()
         try:

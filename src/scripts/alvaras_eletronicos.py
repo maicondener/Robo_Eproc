@@ -21,31 +21,42 @@ class AlvarasEletronicos(BaseScraper):
             await self.navigate_to_home(page)
             await self.login(page)
 
-            # 2. Pesquisa na sidebar e navegação no menu
+            # 2. Navegar para a tela de Relatório Alvará Eletrônico via Sidebar
             self.logger.info("Pesquisando 'Relatório Alvará Eletrônico' na sidebar...")
             
+            # Aguarda carregamento após login
+            await page.wait_for_load_state('networkidle')
+            
+            # Verificação de Redirecionamento (Sessão Expirada)
+            # No modo headless, o eproc pode redirecionar para o login se a sessão salva for inválida
+            if 'txtUsuario' in await page.content():
+                self.logger.warning('Sessão expirada. Tentando logar novamente...')
+                await self.login(page)
+                await page.wait_for_load_state('networkidle')
+
             # Preencher o campo de pesquisa da sidebar
             sidebar_search = page.locator('#sidebar-searchbox')
-            await sidebar_search.wait_for(state='visible')
+            await sidebar_search.wait_for(state='visible', timeout=30000)
             await sidebar_search.fill('Relatório Alvará Eletrônico')
             await sidebar_search.press('Enter')
             
-            # Clicar no link que aparece como resultado
+            # Clicar no link resultante
             self.logger.info("Link filtrado. Clicando em 'Relatório Alvará Eletrônico'...")
-            # O seletor provido pelo usuário é exato: link com aria-label correspondente
             relatorio_link = page.locator('a[aria-label="Relatório Alvará Eletrônico"]')
-            await relatorio_link.wait_for(state='visible', timeout=10000)
+            await relatorio_link.wait_for(state='visible', timeout=15000)
             await relatorio_link.click()
             
-            # Aguarda carregamento do formulário
-            await page.wait_for_load_state('networkidle')
-            
             # 3. Preencher Filtros do Formulário
-            self.logger.info('Preenchendo formulário...')
+            self.logger.info('Aguardando formulário de relatório...')
             
+            # Espera explícita pelo seletor do órgão (elemento chave do formulário)
+            # Timeout estendido de 45s pois em headless a renderização pode ser mais lenta
+            sel_orgao = page.locator('#selOrgao')
+            await sel_orgao.wait_for(state='visible', timeout=45000)
+
             # Selecionar o órgão: TODIA1ECIV (value=270000100)
             self.log_success('Selecionando Órgão: TODIA1ECIV')
-            await page.locator('#selOrgao').select_option(value='270000100')
+            await sel_orgao.select_option(value='270000100')
             
             # Calcular a data de ontem (ontem é feriado ou final de semana, o eproc aceita qualquer data válida)
             # O input type="date" espera o formato yyyy-mm-dd

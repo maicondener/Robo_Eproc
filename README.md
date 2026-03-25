@@ -57,9 +57,15 @@ python -m src.main --script loc_urgente
 
 **Extrair Relatório de Processos Conclusos:**
 ```bash
-python -m src.scripts.relatorio_conclusos
+python -m src.main --script relatorio_conclusos
 ```
 Este script extrai a planilha, converte para JSON e envia diretamente para a API do LegalMind.
+
+**Extrair Relatório de Alvarás Eletrônicos (Sincronização Google Drive):**
+```bash
+python -m src.main --script alvaras_eletronicos
+```
+Este script automatiza a extração de alvarás e sincroniza os dados diretamente com uma planilha no **Google Drive**, realizando o merge automático para evitar duplicidade.
 
 **Modo debug (browser visível):**
 ```bash
@@ -96,10 +102,12 @@ curl -X POST "http://localhost:8000/run/loc_peticoes" \
 
 ## ✨ Features
 
+- ✅ **Integração Google Drive** — Sincronização automática de planilhas.
+- ✅ **Estabilidade Headless** — Configuração automática de User-Agent e Viewport para evitar bloqueios 403.
 - ✅ **Login Automático** com suporte a 2FA (TOTP).
 - ✅ **Seleção de Perfil** automática.
 - ✅ **Persistência de Sessão** (evita logins repetidos).
 - ✅ **Paginação Automática** na extração de processos.
-- ✅ **Exportação CSV** limpa e organizada.
+- ✅ **Exportação CSV/Excel** limpa e organizada.
 - ✅ **LegalMind Auto-Startup** — inicia containers Docker automaticamente se necessário.
 - ✅ **Modo API** (FastAPI) e **CLI**.
