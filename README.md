@@ -51,19 +51,48 @@ python -m src.main --script loc_peticao_inicial
 ```
 
 **Extrair processos do localizador "URGENTE":**
+```bash
+python -m src.main --script loc_urgente
+```
+
 **Extrair Relatório de Processos Conclusos:**
 ```bash
 python -m src.scripts.relatorio_conclusos
 ```
 Este script extrai a planilha, converte para JSON e envia diretamente para a API do LegalMind.
 
+**Modo debug (browser visível):**
+```bash
+python -m src.main --script loc_peticoes --show-browser
+```
+
 ### 4. Integração LegalMind API
 
 O robô agora está configurado para enviar os dados diretamente para o Core do sistema LegalMind, eliminando a necessidade de gestão manual de arquivos CSV.
 
 **Para que a integração funcione:**
-1.  O **LegalMind Core** deve estar rodando (`docker-compose up`).
-2.  Você deve gerar um token de autenticação no LegalMind (`create_token.py`) e adicioná-lo ao `.env` deste robô.
+1.  Configure `LEGALMIND_API_URL` e `LEGALMIND_API_KEY` no `.env`.
+2.  O robô **inicia automaticamente** o LegalMind Core via Docker se ele não estiver rodando.
+    - Requer Docker instalado e o projeto LegalMind em `/mnt/c/LegalMind` (Linux/WSL) ou `C:\LegalMind` (Windows).
+    - Para gerar o token: `docker exec -it legalmind_api python create_token.py`
+
+### 5. Execução via API Web
+
+Para rodar o robô como um serviço que pode ser acessado por outros sistemas:
+
+```bash
+uvicorn src.main:app --reload
+```
+
+O servidor estará disponível em `http://localhost:8000`.
+
+**Executar um script via API (cURL):**
+```bash
+curl -X POST "http://localhost:8000/run/loc_peticoes" \
+  -H "X-API-Key: sua_api_key_aqui"
+```
+
+**Documentação interativa:** Acesse `http://localhost:8000/docs` no navegador para testar os endpoints.
 
 ## ✨ Features
 
@@ -72,4 +101,5 @@ O robô agora está configurado para enviar os dados diretamente para o Core do 
 - ✅ **Persistência de Sessão** (evita logins repetidos).
 - ✅ **Paginação Automática** na extração de processos.
 - ✅ **Exportação CSV** limpa e organizada.
+- ✅ **LegalMind Auto-Startup** — inicia containers Docker automaticamente se necessário.
 - ✅ **Modo API** (FastAPI) e **CLI**.
