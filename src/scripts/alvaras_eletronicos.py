@@ -84,7 +84,10 @@ class AlvarasEletronicos(BaseScraper):
 
             # 6. Processar Dados e Sincronizar com Google Drive
             self.logger.info('Processando arquivo Excel...')
-            df_novo = pd.read_excel(novo_arquivo_path)
+            # O eproc costuma gerar arquivos com título na primeira linha.
+            # Segundo o usuário, as linhas 1 e 2 são o cabeçalho, então usamos header=1
+            # para que a segunda linha seja considerada o nome das colunas.
+            df_novo = pd.read_excel(novo_arquivo_path, header=1)
             
             if df_novo.empty:
                 self.logger.warning('O relatório baixado está vazio.')
@@ -100,8 +103,13 @@ class AlvarasEletronicos(BaseScraper):
                 
                 if download_from_drive(file_id, arquivo_antigo_path):
                     df_antigo = pd.read_excel(arquivo_antigo_path)
+                    
+                    # Alinhar colunas do novo ao antigo para evitar duplicação de cabeçalho
+                    # Usa as colunas do arquivo existente como referência
+                    df_novo_alinhado = pd.DataFrame(df_novo.values, columns=df_antigo.columns[:len(df_novo.columns)])
+                    
                     # Adicionar dados novos ao final dos dados antigos
-                    df_final = pd.concat([df_antigo, df_novo], ignore_index=True)
+                    df_final = pd.concat([df_antigo, df_novo_alinhado], ignore_index=True)
                     df_final.to_excel(temp_final_path, index=False)
                     self.logger.info(f'Dados mesclados. Total de linhas: {len(df_final)}')
                     
