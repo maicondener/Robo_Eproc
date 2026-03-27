@@ -184,6 +184,12 @@ class BaseScraper(ABC):
 
             self.logger.info(f"Login realizado para usuário: {settings.EPROC_LOGIN}")
             
+            # Aguarda a página principal carregar completamente após o fluxo de login/redirecionamento
+            try:
+                await page.wait_for_load_state("networkidle", timeout=15000)
+            except PlaywrightTimeoutError:
+                self.logger.debug("Timeout aguardando networkidle após login. Prosseguindo...")
+
             # Salva o estado da sessão (cookies, storage) para próximas execuções
             await page.context.storage_state(path="state.json")
             self.logger.info("Sessão salva em 'state.json'")

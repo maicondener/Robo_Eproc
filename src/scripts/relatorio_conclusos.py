@@ -26,6 +26,15 @@ class RelatorioConclusos(BaseScraper):
             # 1. Navegar e Logar (Login é tratado na base se não estiver logado)
             await self.navigate_to_home(page)
             await self.login(page)
+            
+            # Garante que a página do painel carregou (crucial para estabilidade no modo headless)
+            await page.wait_for_load_state("networkidle")
+            
+            # Verificação de segurança: em modo headless, pode haver falso-positivo no cache
+            if 'txtUsuario' in await page.content():
+                self.logger.warning('Sessão expirada ou redirecionada. Tentando logar novamente...')
+                await self.login(page)
+                await page.wait_for_load_state('networkidle')
 
             # 2. Pesquisar no menu e acessar "Relatórios Estatísticos"
             self.logger.info("Buscando 'Relatórios Estatísticos'...")
