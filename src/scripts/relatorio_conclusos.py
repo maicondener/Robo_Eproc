@@ -98,8 +98,8 @@ class RelatorioConclusos(BaseScraper):
             else:
                 self.logger.info("GOOGLE_DRIVE_FOLDER_ID não configurado. Pulando upload.")
 
-            # Carrega o Excel para o DataFrame
-            df = pd.read_excel(temp_path)
+            # Carrega o Excel para o DataFrame forçando colunas como string para não perder zeros à esquerda
+            df = pd.read_excel(temp_path, dtype=str)
 
             # 6. Integrar com LegalMind Core
             self.logger.info("Integrando dados com o LegalMind Core...")

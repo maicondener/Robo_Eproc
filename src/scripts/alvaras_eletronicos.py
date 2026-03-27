@@ -98,7 +98,8 @@ class AlvarasEletronicos(BaseScraper):
             # O eproc costuma gerar arquivos com título na primeira linha.
             # Segundo o usuário, as linhas 1 e 2 são o cabeçalho, então usamos header=1
             # para que a segunda linha seja considerada o nome das colunas.
-            df_novo = pd.read_excel(novo_arquivo_path, header=1)
+            # Forçamos dtype=str para não perder zeros à esquerda em nrs de processo.
+            df_novo = pd.read_excel(novo_arquivo_path, header=1, dtype=str)
             
             if df_novo.empty:
                 self.logger.warning('O relatório baixado está vazio.')
@@ -113,7 +114,7 @@ class AlvarasEletronicos(BaseScraper):
                 arquivo_antigo_path = os.path.join(temp_dir, 'old_alvara.xlsx')
                 
                 if download_from_drive(file_id, arquivo_antigo_path):
-                    df_antigo = pd.read_excel(arquivo_antigo_path)
+                    df_antigo = pd.read_excel(arquivo_antigo_path, dtype=str)
                     
                     # Alinhar colunas do novo ao antigo para evitar duplicação de cabeçalho
                     # Usa as colunas do arquivo existente como referência
