@@ -3,6 +3,7 @@ import os
 import shutil
 import pandas as pd
 import requests
+import re
 from playwright.async_api import Page
 from src.scripts.base import BaseScraper, ScraperResult
 from src.logger import logger
@@ -36,19 +37,30 @@ class RelatorioConclusos(BaseScraper):
                 await self.login(page)
                 await page.wait_for_load_state('networkidle')
 
-            # 2. Pesquisar no menu e acessar "Relatórios Estatísticos"
-            self.logger.info("Buscando 'Relatórios Estatísticos'...")
+            # 2. Navegar para a tela de Relatórios Estatísticos via Sidebar
+            self.logger.info('Pesquisando "Relatórios Estatísticos" na sidebar...')
             
-            # 1. Expandir menu "Relatórios"
-            self.logger.info("Expandindo menu 'Relatórios'...")
-            await page.get_by_role("link", name="Relatórios", exact=True).click()
+            # Preencher o campo de pesquisa da sidebar
+            sidebar_search = page.locator('#sidebar-searchbox')
+            await sidebar_search.wait_for(state='visible', timeout=30000)
+            await sidebar_search.clear()
+            # Busca por "Estatístico" que cobre "Relatórios Estatísticos", "Estatísticos", etc.
+            await sidebar_search.fill('Estatístico')
+            await page.wait_for_timeout(1500)  # Aguarda a filtragem dinâmica do menu (Javascript nativo)
+            await sidebar_search.press('Enter')
             
-            # 2. Clicar no link "Relatórios Estatísticos"
-            self.logger.info("Clicando em 'Relatórios Estatísticos'...")
+            # Clicar no link resultante
+            self.logger.info('Link filtrado. Localizando e clicando no menu...')
             
-            # Se o link estiver visível, clica. Se estiver em um menu colapsado, talvez precise expandir.
-            # O usuário forneceu o seletor exato.
-            await page.get_by_role("link", name="Relatórios Estatísticos", exact=True).click()
+            try:
+                relatorio_link = page.locator('a:has-text("Estatístico")').first
+                await relatorio_link.wait_for(state='visible', timeout=15000)
+                await relatorio_link.click()
+            except Exception:
+                self.logger.warning('Link com texto "Estatístico" não encontrado. Tentando alternativa por role...')
+                fallback_link = page.get_by_role("link", name=re.compile("Estatístico", re.IGNORECASE)).first
+                await fallback_link.wait_for(state='visible', timeout=10000)
+                await fallback_link.click()
             
             # Aguarda carregamento da página de relatórios (iframe ou nova página)
             await page.wait_for_load_state("domcontentloaded")
