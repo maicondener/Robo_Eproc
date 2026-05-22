@@ -4,9 +4,10 @@ O **Robô Eproc TJTO** é uma ferramenta de automação (RPA) desenvolvida em Py
 
 ## Funcionalidades Principais
 
-- **Pesquisa e Extração em Localizadores**: Varre localizadores específicos no Eproc (ex: Petição Inicial, Petições, Urgente) e extrai os números dos processos através de expressões regulares.
+- **Pesquisa e Extração em Localizadores**: Varre localizadores específicos no Eproc (ex: Petição Inicial, Petições, Urgente e Mandados) e extrai os números dos processos e metadados de data/hora associados através de seletores avançados e expressões regulares.
+- **Sincronização Avançada com Google Sheets v4**: Mecanismo inteligente de leitura de registros, desduplicação com segundos de precisão baseada em chave unívoca de data e hora (usando formatação `'DD/MM/AAAA - HH:MM:SS'` com hífen para preservar horas e evitar truncamentos no Sheets) e gravação em lote (*batch update*).
 - **Relatório de Processos Conclusos**: Emite, faz o download do relatório CSV, processa as datas e envia um pacote estruturado para integração.
-- **Integração LegalMind**: Os dados extraídos são enviados via API de forma automática para o core do *LegalMind*.
+- **Integração LegalMind**: Os dados extraídos de forma inédita são enviados via API de forma automática para o core do *LegalMind*, otimizando a largura de banda e evitando processamento redundante.
 - **Modos de Execução**: 
   - API REST HTTP usando **FastAPI**.
   - Interface de Linha de Comando (CLI).
@@ -63,13 +64,16 @@ Ideal para testes no terminal, execuções locais assistidas ou CRON.
 
 ```bash
 # Executa a extração do localizador "Petição Inicial" de forma oculta (headless)
-python main.py --script loc_peticao_inicial
+python -m src.main --script loc_peticao_inicial
 
 # Executa exibindo o navegador
-python main.py --script loc_peticao_inicial --show-browser
+python -m src.main --script loc_peticao_inicial --show-browser
 
-# Relatório de Conclusos
-python main.py --script eproc_concluso
+# Executa a extração e sincronização do localizador "Mandados"
+python -m src.main --script loc_mandados
+
+# Relatório de Processos Conclusos
+python -m src.main --script relatorio_conclusos
 ```
 
 ### MODO API (FastAPI)

@@ -37,13 +37,19 @@ Esta classe cuida especificamente de fluxos do Eproc TJTO, isto é:
 3. Pega o nome do localizador (a ser implementado nas classes filhas) e raspa por todas as tabelas o texto exposto identificando o **Padrão CNJ de um Processo**, utilizando `regex`.
 4. Transforma todos estes processos detectados em listas e envia utilizando os utilitários de integração para o Banco de Dados.
 
-- Subclasses: `loc_peticao_inicial.py`, `loc_peticoes.py` e `loc_urgente.py` são as adaptações de cada pesquisa e herdam de `loc_base.py`, fornecendo apenas nome do localizador específico na variável de classe `LOCATOR_NAME`.
+- Subclasses: `loc_peticao_inicial.py`, `loc_peticoes.py`, `loc_urgente.py` e `loc_mandados.py`. Elas herdam de `loc_base.py`. Enquanto as três primeiras fornecem apenas o nome do localizador específico na variável de classe `LOCATOR_NAME`, a classe `loc_mandados.py` estende a extração para ler as informações de data de inclusão diretamente das colunas da tabela do eproc, aplicando regras estritas de negócios para sincronização incremental no Sheets e posterior envio dos inéditos para o LegalMind Core.
 
 ### Relatórios Complexos (`eproc_concluso.py`)
 Relatórios maiores são gerados através da emissão interna no botão "Emitir CSV" da plataforma do Eproc, para depois passarem por manipulação avançada de processamento de dados usando o **Pandas**. O script de conversão readequa nomes e valida formatação de datas.
 
 ## 3. O Módulo Utilitário e de Integrações (`src/utils/`)
-Sempre que uma etapa (`run`) do Scraper terminar o seu escopo, os dados raspados não devem ficar persistidos ou largados localmente. Esse módulo fornece sub-rotinas acionadas do Eproc (o cliente requereu via `requests`) de modo a expor interfaces HTTP POST enviando JSON das listas encontradas ao ambiente na nuvem.
+Sempre que uma etapa (`run`) do Scraper terminar o seu escopo, os dados raspados não devem ficar persistidos ou largados localmente de forma inerte. Esse módulo fornece sub-rotinas acionadas do Eproc de modo a expor interfaces HTTP POST enviando JSON das listas encontradas ao ambiente na nuvem ou integrando dados com planilhas de forma segura.
+
 - `integracao_legalmind.py`
   1. `enviar_para_legalmind`: Submete processos mapeados por Localizador.
   2. `enviar_relatorio_concluso`: Envia dicionários com data, vara e prioridade manipulados pelo Pandas.
+- `google_sheets.py`
+  Fornece a classe `GoogleSheetsClient` que orquestra a integração profissional com a Google Sheets API v4.
+  1. **Autenticação Robusta:** Utiliza o fluxo de aplicativo de desktop OAuth2 via `credentials.json` para autorizar acessos e gerar o token local `token.json` com capacidade de atualização automática contínua.
+  2. **Tratamento de Data com Hífen Separador:** Grava datas formatadas como `'DD/MM/AAAA - HH:MM:SS'` (forçando o Sheets a interpretá-las como texto simples), o que previne truncamentos automáticos e preserva as horas na leitura de verificação.
+  3. **Proteção Contra Duplicidade:** Realiza desduplicação cruzando `Número do Processo` e `Data e Hora de Inclusão` antes de enviar as escritas em lote (*batch update*).

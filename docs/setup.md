@@ -102,3 +102,37 @@ Para que o robô faça login automaticamente, ele precisa gerar o código TOTP (
 > python -m src.scripts.test_2fa
 > ```
 > O código gerado deve ser igual ao do seu aplicativo autenticador (Google Authenticator, Microsoft Authenticator, etc).
+
+---
+
+## 📊 Configurando a API do Google Sheets v4
+
+Para que o script `loc_mandados` possa ler e gravar dados diretamente na sua planilha do Google Sheets, siga os passos abaixo para configurar as credenciais de acesso:
+
+### Passo 1: Criar credenciais no Google Cloud Console
+1. Acesse o [Google Cloud Console](https://console.cloud.google.com/).
+2. Crie um novo projeto (ex: *Robo-Eproc-Sheets*).
+3. No painel, vá em **Biblioteca** e pesquise por **Google Sheets API**. Clique em **Ativar**.
+4. Vá para a guia de **Tela de Consentimento OAuth** (OAuth Consent Screen):
+   - Selecione **Externo**.
+   - Preencha os dados básicos necessários (Nome do app, e-mail de suporte).
+   - Na seção de usuários de teste, **adicione o e-mail da sua conta Google** que tem acesso à planilha a ser editada.
+5. Acesse a guia **Credenciais**:
+   - Clique em **+ Criar Credenciais** e selecione **ID do cliente OAuth**.
+   - Escolha o tipo de aplicativo **Aplicativo de desktop** (Desktop App).
+   - Nomeie como desejar e clique em **Criar**.
+6. Uma vez criado, clique em **Fazer download do JSON** do cliente gerado.
+
+### Passo 2: Adicionar o Arquivo ao Projeto
+1. Renomeie o arquivo JSON baixado para exatamente `credentials.json`.
+2. Mova ou cole o arquivo `credentials.json` na **raiz** do projeto `Robo_Eproc/` (onde o arquivo `.env` está localizado).
+
+### Passo 3: Primeira Execução e Geração de Token
+Na primeira vez que você rodar o robô que utiliza a API do Google Sheets (ex: `python -m src.main --script loc_mandados`), o terminal pausará e abrirá uma aba no seu navegador web padrão:
+1. Faça login na conta do Google que você cadastrou como usuário de teste e que tem acesso à planilha.
+2. Se aparecer um aviso informando que o Google não verificou o app, clique em **Avançado** e em **Acessar [Nome do seu App] (não seguro)**.
+3. Permita os escopos solicitados para leitura e gravação nas planilhas.
+4. Após o sucesso da autenticação, o navegador exibirá uma mensagem confirmando e você poderá fechar a aba.
+5. O script criará automaticamente o arquivo `token.json` na raiz do projeto. Esse token expira em alguns dias, mas o robô possui mecanismo de atualização automática em segundo plano (*auto-refresh*), permitindo que você nunca mais precise interagir de forma visual no navegador!
+
+> 🔒 **Segurança:** O arquivo `credentials.json` e o `token.json` contêm credenciais de acesso às suas planilhas e já estão adicionados no arquivo `.gitignore` do projeto para impedir que sejam expostos acidentalmente em repositórios Git públicos.

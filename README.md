@@ -67,6 +67,15 @@ python -m src.main --script alvaras_eletronicos
 ```
 Este script automatiza a extração de alvarás e sincroniza os dados diretamente com uma planilha no **Google Drive**, realizando o merge automático para evitar duplicidade.
 
+**Extrair processos do localizador "MANDADOS - CITAÇÃO/INTIMAÇÃO ELETRÔNICA" (Integração Google Sheets v4):**
+```bash
+python -m src.main --script loc_mandados
+```
+Este script automatiza a extração de processos do localizador de mandados, realiza a leitura da coluna `"Inclusão no localizador"` do eproc e sincroniza de forma incremental com a planilha do **Google Sheets** (`1ZoB5WItw1KwY4zIkrfLhAtWmgIDMbLNJRaCSM0Il6po`). Ele utiliza um mecanismo robusto de normalização em formato brasileiro com hífen separador (`DD/MM/AAAA - HH:MM:SS`) na chave de controle, o que garante:
+- **Zero Duplicidade**: Desduplicação 100% precisa em relação a registros históricos no Sheets.
+- **Múltiplos Eventos Diários**: Captura múltiplos eventos em horários distintos de um mesmo dia para um mesmo processo sem sofrer truncamento.
+- Os processos inéditos sincronizados no Sheets são enviados de forma exclusiva à API do **LegalMind Core**.
+
 **Modo debug (browser visível):**
 ```bash
 python -m src.main --script loc_peticoes --show-browser
@@ -102,6 +111,7 @@ curl -X POST "http://localhost:8000/run/loc_peticoes" \
 
 ## ✨ Features
 
+- ✅ **Integração Google Sheets API v4** — Mapeamento dinâmico e inserção de dados em lote com controle rígido de unicidade e desduplicação robusta baseada em data e hora.
 - ✅ **Integração Google Drive** — Sincronização automática de planilhas.
 - ✅ **Estabilidade Headless** — Configuração automática de User-Agent e Viewport para evitar bloqueios 403.
 - ✅ **Login Automático** com suporte a 2FA (TOTP).

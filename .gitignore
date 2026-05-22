@@ -219,3 +219,6 @@ service-account*.json
 
 # logs
 logs/
+
+#VS Code
+.vscode/
