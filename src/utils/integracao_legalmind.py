@@ -1,8 +1,12 @@
 import requests
+import urllib3
 from typing import List
 from src.logger import logger
 from src.config import settings
 from src.utils.legalmind_startup import ensure_legalmind_running
+
+# Desabilita avisos de segurança para requisições HTTPS sem verificação de certificado
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def _get_auth_headers() -> dict:
@@ -47,7 +51,8 @@ def enviar_para_legalmind(processos: List[str], localizador: str = None):
             url,
             json=payload,
             headers=headers,
-            timeout=30
+            timeout=30,
+            verify=False
         )
 
         if response.status_code == 200:
@@ -87,7 +92,8 @@ def enviar_relatorio_concluso(items: List[dict]):
             url,
             json=items,
             headers=headers,
-            timeout=60
+            timeout=60,
+            verify=False
         )
 
         if response.status_code == 200:

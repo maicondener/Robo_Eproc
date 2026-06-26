@@ -87,9 +87,8 @@ O robô agora está configurado para enviar os dados diretamente para o Core do 
 
 **Para que a integração funcione:**
 1.  Configure `LEGALMIND_API_URL` e `LEGALMIND_API_KEY` no `.env`.
-2.  O robô **inicia automaticamente** o LegalMind Core via Docker se ele não estiver rodando.
-    - Requer Docker instalado e o projeto LegalMind em `/mnt/c/LegalMind` (Linux/WSL) ou `C:\LegalMind` (Windows).
-    - Para gerar o token: `docker exec -it legalmind_api python create_token.py`
+2.  O robô verifica a disponibilidade realizando um ping automático para a API antes de iniciar a extração e integração de dados.
+    - A integração suporta conexão local ou externa (incluindo instâncias HTTPS que possuam certificados SSL pendentes/autoassinados, ignorando erros de validação SSL automaticamente).
 
 ### 5. Execução via API Web
 
@@ -119,5 +118,5 @@ curl -X POST "http://localhost:8000/run/loc_peticoes" \
 - ✅ **Persistência de Sessão** (evita logins repetidos).
 - ✅ **Paginação Automática** na extração de processos.
 - ✅ **Exportação CSV/Excel** limpa e organizada.
-- ✅ **LegalMind Auto-Startup** — inicia containers Docker automaticamente se necessário.
+- ✅ **LegalMind Connectivity** — validação automática da disponibilidade da API com suporte a SSL Bypass.
 - ✅ **Modo API** (FastAPI) e **CLI**.
